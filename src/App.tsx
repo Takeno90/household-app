@@ -13,24 +13,30 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 
 function App() {
+  //Firestoreエラーかどうかを判定する型ガード
+  function isFireStoreError(
+    err: unknown
+  ): err is { code: string; message: string } {
+    return typeof err === "object" && err !== null && "code" in err;
+  }
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   useEffect(() => {
     const fecheTransactions = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "Transactions"));
-        console.log(querySnapshot);
         const transactionsData = querySnapshot.docs.map((doc) => {
-          // doc.data() is never undefined for query doc snapshots
-          //console.log(doc.id, " => ", doc.data());
           return {
             ...doc.data(),
             id: doc.id,
           } as Transaction;
         });
-        console.log(transactionsData);
         setTransactions(transactionsData);
       } catch (err) {
-        //error
+        if (isFireStoreError(err)) {
+          console.error("Firestoreのエラーは:", err);
+        } else {
+          console.error("一般的名エラーは:", err);
+        }
       }
     };
     fecheTransactions();
