@@ -12,7 +12,7 @@ import {
 import React, { JSX, useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close"; // 閉じるボタン用のアイコン
 import FastfoodIcon from "@mui/icons-material/Fastfood"; //食事アイコン
-import { Controller, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { ExpenseCategory, IncomeCategory } from "../types";
 import AlarmIcon from "@mui/icons-material/Alarm";
 import AddHomeIcon from "@mui/icons-material/AddHome";
@@ -30,6 +30,7 @@ interface TransactionFormProps {
   onCloseForm: () => void;
   isEntryDrawerOpen: boolean;
   currentDay: string;
+  onSaveTransaction: (transaction: Schema) => Promise<void>;
 }
 type incomeExpense = "income" | "expense";
 
@@ -42,6 +43,7 @@ const TransactionForm = ({
   onCloseForm,
   isEntryDrawerOpen,
   currentDay,
+  onSaveTransaction,
 }: TransactionFormProps) => {
   const formWidth = 320;
   // 支出用カテゴリ
@@ -67,6 +69,7 @@ const TransactionForm = ({
     watch,
     formState: { errors },
     handleSubmit,
+    reset,
   } = useForm<Schema>({
     defaultValues: {
       type: "expense",
@@ -80,8 +83,10 @@ const TransactionForm = ({
   });
   console.log(errors);
 
+  // 収支タイプを切り替える関数
   const incomeExpenseToggle = (type: incomeExpense) => {
     setValue("type", type);
+    //setValue("category", "");
   };
 
   // 収支タイプを監視
@@ -96,8 +101,18 @@ const TransactionForm = ({
     setCategories(newCategories);
   }, [currentType]);
 
-  const onSubmit = (data: any) => {
+  //送信処理
+  const onSubmit: SubmitHandler<Schema> = (data) => {
     console.log(data);
+    onSaveTransaction(data);
+
+    reset({
+      type: "expense",
+      date: currentDay,
+      amount: 0,
+      category: "" as Schema["category"],
+      content: "",
+    });
   };
   return (
     <Box
